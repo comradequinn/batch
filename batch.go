@@ -38,7 +38,7 @@ func Run(cfg Config) {
 	processedRecordsCache, bufferSize, wg := newStringSet(), cfg.Workers*2, sync.WaitGroup{}
 
 	processedRecords, done := startProcessedWorker(bufferSize, cfg.ProcessedRecordKeysFile, cfg.ProgressReportFrequency, time.Now(), processedRecordsCache, cfg.KeyFor)
-	unprocessedRecords := startUnprocessedWorker(bufferSize, cfg.InputFile, processedRecordsCache, cfg.KeyFor, cfg.Parse)
+	unprocessedRecords := startUnprocessedWorker(bufferSize, cfg.InputFile, cfg.InputFileDelimiter, processedRecordsCache, cfg.KeyFor, cfg.Parse)
 
 	for i := 0; i < cfg.Workers; i++ {
 		wg.Add(1)
@@ -56,7 +56,7 @@ func Run(cfg Config) {
 			staggeredStartDuration, tickerReset := time.Duration(int64(initialMinRecordProcessingTime)/int64(cfg.Workers)*int64(workerID)), false
 			minBatchItemTimeElapsed, recordsProcessed := time.NewTicker(staggeredStartDuration), 0
 
-			LogPrintFunc("starting worker %v after initial dalay of %vms", workerID, staggeredStartDuration.Milliseconds())
+			LogPrintFunc("starting worker %v after initial delay of %vms", workerID, staggeredStartDuration.Milliseconds())
 
 			for record := range unprocessedRecords {
 				if err := cfg.Task(record); err != nil {

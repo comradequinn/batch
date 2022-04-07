@@ -7,7 +7,7 @@ import (
 )
 
 // startUnprocessedWorker returns a channel from which unprocessed records can be read
-func startUnprocessedWorker(bufferSize int, file string, processedRecordsCache *stringSet, keyFor func(interface{}) (string, error), parse func([]string) (interface{}, error)) <-chan interface{} {
+func startUnprocessedWorker(bufferSize int, file, fileDelimiter string, processedRecordsCache *stringSet, keyFor func(interface{}) (string, error), parse func([]string) (interface{}, error)) <-chan interface{} {
 	<-processedRecordsCache.Ready
 
 	out := make(chan interface{}, bufferSize)
@@ -26,8 +26,12 @@ func startUnprocessedWorker(bufferSize int, file string, processedRecordsCache *
 
 		s := bufio.NewScanner(f)
 
+		if fileDelimiter == "" {
+			fileDelimiter = ","
+		}
+
 		for s.Scan() {
-			line := strings.Split(strings.TrimPrefix(s.Text(), string('\ufeff')), ",") // strip bom if present
+			line := strings.Split(strings.TrimPrefix(s.Text(), string('\ufeff')), fileDelimiter) // strip bom if present
 
 			record, err := parse(line)
 

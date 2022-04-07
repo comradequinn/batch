@@ -15,6 +15,8 @@ type Config struct {
 	ProgressReportFrequency time.Duration
 	// InputFile contains the records that are to be batch processed
 	InputFile string
+	// InputFileDelimiter specifies the delimiter of fields within each line of the input file, default is ","
+	InputFileDelimiter string
 	// ProcessedRecordKeysFile will contain unique keys for each record that has been processed
 	ProcessedRecordKeysFile string
 	// KeyFor represents the function to a derive a unique key from a record

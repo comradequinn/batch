@@ -9,64 +9,33 @@ import (
 	"github.com/comradequinn/batch"
 )
 
-// numbers represents two numbers to be added
-type numbers struct {
-	Val1 int
-	Val2 int
-}
-
 func main() {
-	cfg := batch.Config{
+	// numbers represents two numbers to be added
+	type numbers struct {
+		Val1 int
+		Val2 int
+	}
+
+	cfg := batch.Config[numbers]{
 		Workers:                 10,
 		MinRecordProcessingTime: time.Second,
 		InputFile:               "./data/numbers.csv",
 		ProcessedRecordKeysFile: "./data/done.dat",
-		KeyFor:                  keyFor,
-		Parse:                   parse,
-		Task:                    task,
+		KeyFor: func(n numbers) (string, error) {
+			return fmt.Sprintf("%v:%v\n", n.Val1, n.Val2), nil
+		},
+		Parse: func(line []string) (numbers, error) {
+			val1, _ := strconv.Atoi(line[0])
+			val2, _ := strconv.Atoi(line[1])
+
+			return numbers{Val1: val1, Val2: val2}, nil
+		},
+		Task: func(n numbers) error {
+			log.Printf("executing addition task: %v + %v = %v", n.Val1, n.Val2, n.Val1+n.Val2)
+
+			return nil
+		},
 	}
 
 	batch.Run(cfg)
-}
-
-func task(n interface{}) error {
-	numbers, ok := n.(numbers)
-
-	if !ok {
-		return fmt.Errorf("unable to convert %+v to type numbers", n)
-	}
-
-	log.Printf("executing addition task: %v + %v = %v", numbers.Val1, numbers.Val2, numbers.Val1+numbers.Val2)
-
-	return nil
-}
-
-func keyFor(n interface{}) (string, error) {
-	numbers, ok := n.(numbers)
-
-	if !ok {
-		return "", fmt.Errorf("unable to convert %+v to type numbers", n)
-	}
-
-	return fmt.Sprintf("%v:%v\n", numbers.Val1, numbers.Val2), nil
-}
-
-func parse(line []string) (interface{}, error) {
-	var err error
-
-	n := numbers{}
-
-	n.Val1, err = strconv.Atoi(line[0])
-
-	if err != nil {
-		return nil, fmt.Errorf("fatal error reading %v as val1: %v", line[0], err)
-	}
-
-	n.Val2, err = strconv.Atoi(line[1])
-
-	if err != nil {
-		return nil, fmt.Errorf("fatal error reading %v as val2: %v", line[1], err)
-	}
-
-	return n, nil
 }

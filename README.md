@@ -27,67 +27,34 @@ import (
 
 // the simple example below reads in lines of number pairs from a file and adds each pair together, logging the result to stdout
 func main() {
-  // numbers represents two numbers to be added
-  type numbers struct {
-	  Val1 int
-	  Val2 int
-  }
-
-	cfg := batch.Config{
-		Workers:                 10, // specifies the number of workers processng the record
-		MinRecordProcessingTime: time.Second,  // specifies the minimum execution time required for each record a worker processes
-		InputFile:               "./data/numbers.csv", // this contains series of lines numbers to be added in the format "1,2"
-		ProcessedRecordKeysFile: "./data/done.dat", // this is where the keys of processed number records will be written so the job can be stopped and restarted safely
-		KeyFor:                  keyFor, // this func is used to derive a key from a number type
-		Parse:                   parse, // this func is used to parse a record from 
-		Task:                    task, // this func performs the addition of the numnbers and the logging
+	// numbers represents two numbers to be added
+	type numbers struct {
+		Val1 int
+		Val2 int
 	}
 
-	batch.Run(cfg)
-}
+	cfg := batch.Config[numbers]{
+		Workers:                 10, // specifies the number of workers required to be concurrently processing records
+		MinRecordProcessingTime: time.Second, // specifies the minimum time to be spent on each record by a worker
+		InputFile:               "./data/numbers.csv", // this csv file contains a series of lines, each containing two numbers, eg: "1,2"
+		ProcessedRecordKeysFile: "./data/done.dat", // this is where the keys of processed records will be written so the job can be stopped and restarted safely
+		KeyFor: func(n numbers) (string, error) { // this func is used to derive a key from a numbers type
+			return fmt.Sprintf("%v:%v\n", n.Val1, n.Val2), nil
+		},
+		Parse: func(line []string) (numbers, error) { // this func is used to parse a numbers type from a line in the input file
+			val1, _ := strconv.Atoi(line[0]) 
+			val2, _ := strconv.Atoi(line[1]) // ignore errors for the purposes of the example
 
-// Below are the implementations for KeyFor, Parse & Task
+			return numbers{Val1: val1, Val2: val2}, nil
+		},
+		Task: func(n numbers) error { // this func performs the addition of the two numnbers in a numbers type and logs the result
+			log.Printf("executing addition task: %v + %v = %v", n.Val1, n.Val2, n.Val1+n.Val2)
 
-func task(n interface{}) error {
-	numbers, ok := n.(numbers)
-
-	if !ok {
-		return fmt.Errorf("unable to convert %+v to type numbers", n)
+			return nil
+		},
 	}
 
-	log.Printf("executing addition task: %v + %v = %v", numbers.Val1, numbers.Val2, numbers.Val1+numbers.Val2)
-
-	return nil
-}
-
-func keyFor(n interface{}) (string, error) {
-	numbers, ok := n.(numbers)
-
-	if !ok {
-		return "", fmt.Errorf("unable to convert %+v to type numbers", n)
-	}
-
-	return fmt.Sprintf("%v:%v\n", numbers.Val1, numbers.Val2), nil
-}
-
-func parse(line []string) (interface{}, error) {
-	var err error
-
-	n := numbers{}
-
-	n.Val1, err = strconv.Atoi(line[0])
-
-	if err != nil {
-		return nil, fmt.Errorf("fatal error reading %v as val1: %v", line[0], err)
-	}
-
-	n.Val2, err = strconv.Atoi(line[1])
-
-	if err != nil {
-		return nil, fmt.Errorf("fatal error reading %v as val2: %v", line[1], err)
-	}
-
-	return n, nil
+	batch.Run(cfg) // this starts the batch job and blocks until it is completed
 }
 
 ```

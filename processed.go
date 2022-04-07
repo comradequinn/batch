@@ -7,8 +7,8 @@ import (
 )
 
 // startProcessedWorker returns a channel which marks records sent to it as processed by writing their identifying data to file
-func startProcessedWorker(buffer int, file string, progressReportFrequency time.Duration, started time.Time, processedRecordsCache *stringSet, keyFor func(interface{}) (string, error)) (chan<- interface{}, <-chan struct{}) {
-	in, done := make(chan interface{}, buffer), make(chan struct{}, 1)
+func startProcessedWorker[T any](buffer int, file string, progressReportFrequency time.Duration, started time.Time, processedRecordsCache *stringSet, keyFor func(T) (string, error)) (chan<- T, <-chan struct{}) {
+	in, done := make(chan T, buffer), make(chan struct{}, 1)
 
 	populateProcessedRecordsCache(file, processedRecordsCache)
 

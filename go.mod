@@ -1,3 +1,3 @@
 module github.com/comradequinn/batch
 
-go 1.17
+go 1.18

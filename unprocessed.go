@@ -7,10 +7,10 @@ import (
 )
 
 // startUnprocessedWorker returns a channel from which unprocessed records can be read
-func startUnprocessedWorker(bufferSize int, file, fileDelimiter string, processedRecordsCache *stringSet, keyFor func(interface{}) (string, error), parse func([]string) (interface{}, error)) <-chan interface{} {
+func startUnprocessedWorker[T any](bufferSize int, file, fileDelimiter string, processedRecordsCache *stringSet, keyFor func(T) (string, error), parse func([]string) (T, error)) <-chan T {
 	<-processedRecordsCache.Ready
 
-	out := make(chan interface{}, bufferSize)
+	out := make(chan T, bufferSize)
 
 	go func() {
 		LogPrintFunc("starting read unprocessed records process")

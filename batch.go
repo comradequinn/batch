@@ -24,13 +24,13 @@ var (
 	ReportProgressFunc = log.Printf
 )
 
-func Run(cfg Config) {
+func Run[T any](cfg Config[T]) {
 	LogPrintFunc("starting batch record processing from %v\n", cfg.InputFile)
 
 	// wrap KeyFor func to ensure it trims whitespace
-	cfg.KeyFor = func(original func(interface{}) (string, error)) func(interface{}) (string, error) {
-		return func(i interface{}) (string, error) {
-			key, err := original(i)
+	cfg.KeyFor = func(original func(T) (string, error)) func(T) (string, error) {
+		return func(t T) (string, error) {
+			key, err := original(t)
 			return strings.TrimSpace(key), err
 		}
 	}(cfg.KeyFor)

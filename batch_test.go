@@ -9,43 +9,37 @@ import (
 	"time"
 )
 
-// numbers represents two numbers to be added
-type numbers struct {
-	Val1 int
-	Val2 int
-}
-
 func Test_Run(t *testing.T) {
+	type numbers struct {
+		Val1 int
+		Val2 int
+	}
+
 	inf, outf := "./testdata/numbers.csv", "./testdata/done.dat"
 	expectedTotal, actualTotal, mx := 203, 0, sync.Mutex{}
 
 	os.Remove(outf) // clear any cached progress
 
-	cfg := Config{
+	cfg := Config[numbers]{
 		Workers:                 10,
 		MinRecordProcessingTime: time.Millisecond * 100,
 		InputFile:               inf,
 		ProcessedRecordKeysFile: outf,
-		Parse: func(line []string) (interface{}, error) {
-			n := numbers{}
+		Parse: func(line []string) (numbers, error) {
+			val1, _ := strconv.Atoi(line[0])
+			val2, _ := strconv.Atoi(line[1])
 
-			n.Val1, _ = strconv.Atoi(line[0])
-			n.Val2, _ = strconv.Atoi(line[1])
-
-			return n, nil
+			return numbers{Val1: val1, Val2: val2}, nil
 		},
-		KeyFor: func(n interface{}) (string, error) {
-			numbers, _ := n.(numbers)
-			return fmt.Sprintf("%v:%v\n", numbers.Val1, numbers.Val2), nil
+		KeyFor: func(n numbers) (string, error) {
+			return fmt.Sprintf("%v:%v\n", n.Val1, n.Val2), nil
 		},
-		Task: func() func(interface{}) error { // this task adds all number presented to it and stores them in `actualTotal`
-			return func(n interface{}) error { // if `actualTotal` matches `expectedTotal` then all records were read, parsed correctly and passed to the task
-				numbers, _ := n.(numbers)
-
+		Task: func() func(numbers) error { // this task adds all number presented to it and stores them in `actualTotal`
+			return func(n numbers) error { // if `actualTotal` matches `expectedTotal` then all records were read, parsed correctly and passed to the task
 				mx.Lock()
 				defer mx.Unlock()
 
-				actualTotal += numbers.Val1 + numbers.Val2
+				actualTotal += n.Val1 + n.Val2
 
 				return nil
 			}

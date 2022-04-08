@@ -7,7 +7,7 @@ import (
 )
 
 // startUnprocessedWorker returns a channel from which unprocessed records can be read
-func startUnprocessedWorker[T any](bufferSize int, file, fileDelimiter string, processedRecordsCache *stringSet, keyFor func(T) (string, error), parse func([]string) (T, error)) <-chan T {
+func startUnprocessedWorker[T any](bufferSize int, file, fileDelimiter string, continueOnError bool, processedRecordsCache *stringSet, keyFor func(T) (string, error), parse func([]string) (T, error)) <-chan T {
 	<-processedRecordsCache.Ready
 
 	out := make(chan T, bufferSize)
@@ -35,7 +35,15 @@ func startUnprocessedWorker[T any](bufferSize int, file, fileDelimiter string, p
 
 			record, err := parse(line)
 
-			check(err, LogFatalFunc, "fatal error opening %v: %v\n", file, err)
+			if err != nil {
+				LogPrintFunc("error parsing line %v: %v\n", line, err)
+
+				if !continueOnError {
+					os.Exit(1)
+				}
+
+				continue
+			}
 
 			key, err := keyFor(record)
 			check(err, LogFatalFunc, "fatal error creating key for %+v from file %v: %v\n", record, file, err)

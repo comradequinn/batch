@@ -25,6 +25,6 @@ type Config[T any] struct {
 	Parse func([]string) (T, error)
 	// Task represents the function to which each parsed record is passed in order to be acted upon
 	Task func(T) error
-	// ContinueOnError states whether or not processing will terminate if a Task invocation returns an error. If false, a log will still be written
+	// ContinueOnError states whether or not processing will terminate if a Task invocation or Parse attempt returns an error. If false, a log will still be written
 	ContinueOnError bool
 }

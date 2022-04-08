@@ -21,12 +21,22 @@ func main() {
 		MinRecordProcessingTime: time.Second,
 		InputFile:               "./data/numbers.csv",
 		ProcessedRecordKeysFile: "./data/done.dat",
+		ContinueOnError:         true,
 		KeyFor: func(n numbers) (string, error) {
 			return fmt.Sprintf("%v:%v\n", n.Val1, n.Val2), nil
 		},
 		Parse: func(line []string) (numbers, error) {
-			val1, _ := strconv.Atoi(line[0])
-			val2, _ := strconv.Atoi(line[1])
+			val1, err := strconv.Atoi(line[0])
+
+			if err != nil {
+				return numbers{}, fmt.Errorf("parse error: %v", err)
+			}
+
+			val2, err := strconv.Atoi(line[1])
+
+			if err != nil {
+				return numbers{}, fmt.Errorf("parse error: %v", err)
+			}
 
 			return numbers{Val1: val1, Val2: val2}, nil
 		},

@@ -38,7 +38,7 @@ func Run[T any](cfg Config[T]) {
 	processedRecordsCache, bufferSize, wg := newStringSet(), cfg.Workers*2, sync.WaitGroup{}
 
 	processedRecords, done := startProcessedWorker(bufferSize, cfg.ProcessedRecordKeysFile, cfg.ProgressReportFrequency, time.Now(), processedRecordsCache, cfg.KeyFor)
-	unprocessedRecords := startUnprocessedWorker(bufferSize, cfg.InputFile, cfg.InputFileDelimiter, processedRecordsCache, cfg.KeyFor, cfg.Parse)
+	unprocessedRecords := startUnprocessedWorker(bufferSize, cfg.InputFile, cfg.InputFileDelimiter, cfg.ContinueOnError, processedRecordsCache, cfg.KeyFor, cfg.Parse)
 
 	for i := 0; i < cfg.Workers; i++ {
 		wg.Add(1)

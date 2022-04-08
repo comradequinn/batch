@@ -4,5 +4,5 @@ build :
 test :
 	@ go test ./...
 
-exec :
+exec : 
 	@ cd ./cmd/example && go run example.go

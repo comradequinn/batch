@@ -1,0 +1,29 @@
+{
+    // This config provides a basic vscode debug configuration for test and start
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "Start",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
+            "env": {},
+            "args": [
+                "-v",
+                "-portA=8080",
+                "-portB=0",
+                "-data_access_host=MN2USPDAC0001U0"
+            ]
+        }
+    ]
+}

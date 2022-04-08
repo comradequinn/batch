@@ -60,7 +60,7 @@ func Run[T any](cfg Config[T]) {
 
 			for record := range unprocessedRecords {
 				if err := cfg.Task(record); err != nil {
-					LogPrintFunc("error executing task for batch record %+v on worker %v\n", record, workerID)
+					LogPrintFunc("error executing task for batch record %+v on worker %v: %v\n", record, workerID, err)
 
 					if !cfg.ContinueOnError {
 						os.Exit(1)

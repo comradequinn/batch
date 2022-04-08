@@ -42,6 +42,9 @@ func startProcessedWorker[T any](buffer int, file string, progressReportFrequenc
 			_, err = w.WriteString(key + "\n")
 			check(err, LogFatalFunc, "fatal error writing to %v: %v\n", file, err)
 
+			err = w.Flush()
+			check(err, LogFatalFunc, "fatal error flushing to %v: %v\n", file, err)
+
 			select {
 			case <-progressReportDue.C:
 				go func(rp int64, since time.Duration) {
@@ -50,9 +53,6 @@ func startProcessedWorker[T any](buffer int, file string, progressReportFrequenc
 			default:
 			}
 		}
-
-		err = w.Flush()
-		check(err, LogFatalFunc, "fatal error flushing to %v: %v\n", file, err)
 
 		done <- struct{}{}
 
